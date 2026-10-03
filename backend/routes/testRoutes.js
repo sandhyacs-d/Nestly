@@ -1,4 +1,5 @@
 import express from "express";
+import { AppError } from "../errors/appError.js";
 
 const router = express.Router();
 
@@ -7,5 +8,6 @@ router.get("/",(req,res)=>{
         message : "Nestly API is working"
     })
 })
+
 
 export default router;
