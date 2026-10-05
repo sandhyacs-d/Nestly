@@ -3,14 +3,14 @@ import User from "../models/user.js"
 import { generateToken } from "../utils/jwt.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 
-export async function registerUser(req,res){
-    const {name , email, password} = req.body;
+export async function registerUser(req, res) {
+    const { name, email, password } = req.body;
 
 
-    const existingEmail = await User.findOne({email});
+    const existingEmail = await User.findOne({ email });
 
-    if(existingEmail){
-        throw new AppError("Email already exists",409);
+    if (existingEmail) {
+        throw new AppError("Email already exists", 409);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -19,46 +19,46 @@ export async function registerUser(req,res){
     await User.create({
         name,
         email,
-        password : hashedPassword
+        password: hashedPassword
     })
 
     return res.status(201).json({
-        message : "User successfully registered"
+        message: "User successfully registered"
     })
 }
 
-export async function loginUser(req,res){
-    const { email, password} = req.body;
+export async function loginUser(req, res) {
+    const { email, password } = req.body;
 
-     const user = await User.findOne({email});
+    const user = await User.findOne({ email });
 
-    if(!user){
-        throw new AppError("Invalid email or password",401);
+    if (!user) {
+        throw new AppError("Invalid email or password", 401);
     }
 
-    const validPassword = await verifyPassword(password,user.password);
+    const validPassword = await verifyPassword(password, user.password);
 
-    if(!validPassword){
-        throw new AppError("Invalid email or password",401);
+    if (!validPassword) {
+        throw new AppError("Invalid email or password", 401);
     }
 
 
-    const token =generateToken(user._id);
+    const token = generateToken(user._id);
 
     return res.status(200).json({
-        message : "Login successful",
+        message: "Login successful",
         user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role
-},
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        },
         token
     })
 
-    }
+}
 
-export async function getMe(req,res){
+export async function getMe(req, res) {
     return res.status(200).json({
         user: {
             id: req.user._id,
@@ -66,5 +66,5 @@ export async function getMe(req,res){
             email: req.user.email,
             role: req.user.role
         }
-})
+    })
 }

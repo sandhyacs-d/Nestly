@@ -2,20 +2,20 @@ import jwt from "jsonwebtoken";
 import { AppError } from "../errors/appError.js";
 import User from "../models/user.js";
 
-export async function authMiddleware(req,res,next){
+export async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
-    
-     if (!authHeader) {
+
+    if (!authHeader) {
         throw new AppError("Authentication required", 401);
     }
 
     const [scheme, token] = authHeader.split(" ");
 
-    if(scheme !== "Bearer" || !token){
-        throw new AppError("Authentication required",401);
+    if (scheme !== "Bearer" || !token) {
+        throw new AppError("Authentication required", 401);
     }
-    
-     try {
+
+    try {
         const decoded = jwt.verify(
             token,
             process.env.JWT_SECRET
@@ -24,7 +24,7 @@ export async function authMiddleware(req,res,next){
         const user = await User.findById(decoded.userId);
 
         if (!user) {
-    throw new AppError("User not found", 401);
+            throw new AppError("User not found", 401);
         }
 
         req.user = user;
@@ -34,7 +34,7 @@ export async function authMiddleware(req,res,next){
     } catch (error) {
         if (error instanceof AppError) {
             throw error;
-    }
+        }
         throw new AppError("Invalid or expired token", 401);
     }
 
