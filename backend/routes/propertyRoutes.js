@@ -1,6 +1,6 @@
 import express from "express";
 
-import { createProperty, getProperties, getPropertyById, updateProperty } from "../controllers/propertyController.js";
+import { createProperty, deleteProperty, getProperties, getPropertyById, updateProperty } from "../controllers/propertyController.js";
 import { authorize } from "../middleware/authorize.js";
 import { authMiddleware } from "../middleware/protect.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -13,5 +13,6 @@ router.post("/",authMiddleware,authorize("owner"),validateProperty,asyncHandler(
 router.get("/",asyncHandler(getProperties));
 router.get("/:id", asyncHandler(getPropertyById));
 router.patch("/:id",authMiddleware,authorize("owner"),validatePropertyUpdate,asyncHandler(updateProperty));
+router.delete("/:id",authMiddleware,authorize("owner"),asyncHandler(deleteProperty));
 
 export default router;

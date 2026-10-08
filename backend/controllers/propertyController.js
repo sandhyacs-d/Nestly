@@ -65,3 +65,23 @@ export async function updateProperty(req, res) {
         property
     });
 }
+
+export async function deleteProperty(req,res){
+    const { id } = req.params;
+
+    const property = await Property.findById(id);
+
+    if(!property){
+        throw new AppError("Property not found", 404);
+    }
+
+    if(property.owner.toString() !== req.user._id.toString()){
+        throw new AppError("you are not allowed to delete this property", 403);
+    }
+
+    await property.deleteOne();
+
+    return res.status(200).json({
+        message: "Property deleted successfully"
+    });
+}
