@@ -42,3 +42,26 @@ export async function getPropertyById(req, res) {
     return res.status(200).json(property);
 
 }
+
+export async function updateProperty(req, res) {
+    const { id } = req.params;
+
+    const property = await Property.findById(id);
+
+    if (!property) {
+        throw new AppError("Property not found", 404);
+    }
+
+    if (property.owner.toString() !== req.user._id.toString()) {
+        throw new AppError("you are not allowed to update this property", 403);
+    }
+
+    Object.assign(property, req.body);
+
+    await property.save();
+
+    return res.status(200).json({
+        message: "Property updated successfully",
+        property
+    });
+}
