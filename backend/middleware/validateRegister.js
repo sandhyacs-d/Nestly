@@ -80,3 +80,4 @@ export function validateRegister(req, res, next) {
 
     next();
 }
+

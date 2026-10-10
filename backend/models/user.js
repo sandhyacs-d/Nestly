@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
         enum : ["renter","owner","admin"],
         default : "renter",
         required : true
+    },
+    passwordChangedAt:{
+        type : Date
     }
 })
 

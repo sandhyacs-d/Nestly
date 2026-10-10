@@ -68,3 +68,62 @@ export async function getMe(req, res) {
         }
     })
 }
+
+
+export async function updateMe(req, res) {
+    const user = req.user;
+
+    if (req.body.email && req.body.email !== user.email) {
+        const existingUser = await User.findOne({
+            email: req.body.email
+        });
+
+        if (existingUser) {
+            throw new AppError("Email is already in use", 409);
+        }
+    }
+
+    if (req.body.name !== undefined) {
+        user.name = req.body.name;
+    }
+
+    if (req.body.email !== undefined) {
+        user.email = req.body.email;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        }
+    });
+}
+
+export async function changePassword(req, res) {
+    const user = await User.findById(req.user._id).select("+password");
+
+    const isCurrentPasswordValid = await verifyPassword(
+        req.body.currentPassword,
+        user.password
+    );
+
+    if (!isCurrentPasswordValid) {
+        throw new AppError("Current password is incorrect", 401);
+    }
+
+    user.password = await hashPassword(req.body.newPassword);
+    user.passwordChangedAt = new Date();
+    
+    await user.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Password changed successfully"
+    });
+}

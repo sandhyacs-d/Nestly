@@ -27,6 +27,13 @@ export async function authMiddleware(req, res, next) {
             throw new AppError("User not found", 401);
         }
 
+        if (
+            user.passwordChangedAt &&
+            decoded.iat <= Math.floor(user.passwordChangedAt.getTime() / 1000)
+        ) {
+            throw new AppError("Password changed. Please log in again.", 401);
+        }
+
         req.user = user;
 
         next();
