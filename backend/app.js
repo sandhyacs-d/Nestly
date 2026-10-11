@@ -3,6 +3,7 @@ import testRouter from "./routes/testRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import propertyRouter from "./routes/propertyRoutes.js";
 import usersRouter from "./routes/usersRoutes.js";
+import favoriteRouter from "./routes/favoritesRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -15,6 +16,8 @@ app.use("/api/auth",authRouter);
 app.use("/api/properties",propertyRouter);
 
 app.use("/api/users",usersRouter);
+
+app.use("/api/favorites",favoriteRouter);
 
 app.use(errorHandler);
 
