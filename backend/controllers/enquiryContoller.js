@@ -8,7 +8,7 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
     const { message } = req.body;
 
-   
+
     if (typeof message !== "string" || !message.trim()) {
         throw new AppError("Please provide an enquiry message", 400);
     }
@@ -17,7 +17,7 @@ export const createEnquiry = asyncHandler(async (req, res) => {
         throw new AppError("Message cannot exceed 1000 characters", 400);
     }
 
-    
+
     const property = await Property.findById(propertyId);
 
     if (!property) {
@@ -39,7 +39,7 @@ export const createEnquiry = asyncHandler(async (req, res) => {
         );
     }
 
-    
+
     const existingEnquiry = await Enquiry.findOne({
         renter: req.user._id,
         property: property._id
@@ -68,7 +68,7 @@ export const createEnquiry = asyncHandler(async (req, res) => {
             }
         });
     } catch (error) {
-       
+
         if (error.code === 11000) {
             throw new AppError(
                 "You have already enquired about this property",
@@ -79,3 +79,75 @@ export const createEnquiry = asyncHandler(async (req, res) => {
         throw error;
     }
 });
+
+
+export const getSentEnquiries = asyncHandler(async (req, res) => {
+    const enquiries = await Enquiry.find({
+        renter: req.user._id
+    })
+        .populate("property")
+        .populate("owner", "name email")
+        .sort({ createdAt: -1 });
+
+    res.status(200).json({
+        success: true,
+        results: enquiries.length,
+        data: {
+            enquiries
+        }
+    });
+});
+
+
+export const getReceivedEnquiries = asyncHandler(async (req, res) => {
+    const enquiries = await Enquiry.find({
+        owner: req.user._id
+    })
+        .populate("property")
+        .populate("renter", "name email")
+        .sort({ createdAt: -1 });
+
+    res.status(200).json({
+        success: true,
+        results: enquiries.length,
+        data: {
+            enquiries
+        }
+    });
+});
+
+
+export const updateEnquiryStatus = asyncHandler(async (req, res) => {
+    const { enquiryId } = req.params;
+    const { status } = req.body;
+
+    
+    if (!["accepted", "rejected"].includes(status)) {
+        throw new AppError(
+            "Status must be either accepted or rejected",
+            400
+        );
+    }
+
+    
+    const enquiry = await Enquiry.findOne({
+        _id: enquiryId,
+        owner: req.user._id
+    });
+
+    if (!enquiry) {
+        throw new AppError("Enquiry not found", 404);
+    }
+
+    enquiry.status = status;
+    await enquiry.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Enquiry status updated successfully",
+        data: {
+            enquiry
+        }
+    });
+});
+
