@@ -5,6 +5,7 @@ import propertyRouter from "./routes/propertyRoutes.js";
 import usersRouter from "./routes/usersRoutes.js";
 import favoriteRouter from "./routes/favoritesRoutes.js";
 import enquiryRoutes from "./routes/enquiryRoutes.js";
+import roommateRouter from "./routes/roommateProfileRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -21,6 +22,8 @@ app.use("/api/users",usersRouter);
 app.use("/api/favorites",favoriteRouter);
 
 app.use("/api/enquiries", enquiryRoutes);
+
+app.use("/api/roommate-profiles",roommateRouter);
 
 app.use(errorHandler);
 
