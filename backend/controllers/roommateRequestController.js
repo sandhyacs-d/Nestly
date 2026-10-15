@@ -2,25 +2,25 @@ import mongoose from "mongoose";
 import RoommateRequest from "../models/roommateRequest.js";
 import RoommateProfile from "../models/roommateProfile.js";
 import { AppError } from "../errors/appError.js";
-import { asyncHandler }from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createRoommateRequest = asyncHandler(async (req, res) => {
     const { recipientId } = req.params;
     const { message } = req.body;
 
-    
+
     if (req.user.role !== "renter") {
-        throw new AppError("Only renters can send roommate requests",403);
+        throw new AppError("Only renters can send roommate requests", 403);
     }
 
-    
+
     if (!mongoose.isValidObjectId(recipientId)) {
         throw new AppError("Invalid recipient ID", 400);
     }
 
     if (recipientId === req.user._id.toString()) {
         throw new AppError(
-            "You cannot send a roommate request to yourself",400);
+            "You cannot send a roommate request to yourself", 400);
     }
 
 
@@ -30,7 +30,7 @@ export const createRoommateRequest = asyncHandler(async (req, res) => {
             !message.trim() ||
             message.trim().length > 1000
         ) {
-            throw new AppError("Message must be a non-empty string of at most 1000 characters",400);
+            throw new AppError("Message must be a non-empty string of at most 1000 characters", 400);
         }
     }
 
@@ -40,7 +40,7 @@ export const createRoommateRequest = asyncHandler(async (req, res) => {
     });
 
     if (!recipientProfile) {
-        throw new AppError("Recipient does not have an active roommate profile",404);
+        throw new AppError("Recipient does not have an active roommate profile", 404);
     }
 
     const existingRequest = await RoommateRequest.findOne({
@@ -49,7 +49,7 @@ export const createRoommateRequest = asyncHandler(async (req, res) => {
     });
 
     if (existingRequest) {
-        throw new AppError("You have already sent a request to this renter",409);
+        throw new AppError("You have already sent a request to this renter", 409);
     }
 
     try {
@@ -66,13 +66,85 @@ export const createRoommateRequest = asyncHandler(async (req, res) => {
             message: "Roommate request sent successfully",
             data: { roommateRequest }
         });
-        
+
     } catch (error) {
-        
+
         if (error.code === 11000) {
-            throw new AppError("You have already sent a request to this renter",409);
+            throw new AppError("You have already sent a request to this renter", 409);
         }
 
         throw error;
     }
 });
+
+export const getReceivedRoommateRequests = asyncHandler(async (req, res) => {
+    if (req.user.role !== "renter") {
+        throw new AppError(
+            "Only renters can view roommate requests",
+            403
+        );
+    }
+
+    const requests = await RoommateRequest.find({
+        recipient: req.user._id
+    })
+        .populate("sender", "name")
+        .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+        success: true,
+        results: requests.length,
+        data: { requests }
+    });
+});
+
+export const updateRoommateRequestStatus = asyncHandler(async (req, res) => {
+    const { requestId } = req.params;
+    const { status } = req.body;
+
+
+    if (!mongoose.isValidObjectId(requestId)) {
+        throw new AppError("Invalid roommate request ID", 400);
+    }
+
+    if (req.user.role !== "renter") {
+        throw new AppError(
+            "Only renters can update roommate requests",
+            403
+        );
+    }
+
+    if (!["accepted", "rejected"].includes(status)) {
+        throw new AppError(
+            "Status must be either accepted or rejected",
+            400
+        );
+    }
+
+    const request = await RoommateRequest.findOne({
+        _id: requestId,
+        recipient: req.user._id
+    });
+
+    if (!request) {
+        throw new AppError("Roommate Request not found", 404);
+    }
+
+    if (request.status !== "pending") {
+        throw new AppError(
+            "This request has already been processed",
+            409
+        );
+    }
+
+    request.status = status;
+    await request.save();
+
+    return res.status(200).json({
+        success: true,
+        message: `Roommate request ${status} successfully`,
+        data: { request }
+    });
+
+});
+
