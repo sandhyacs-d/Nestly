@@ -80,7 +80,7 @@ export async function getOrCreateConversation(req, res) {
 
 export async function sendMessage(req, res) {
     const { conversationId } = req.params;
-      const { content } = req.body;
+    const { content } = req.body;
 
 
     if (!mongoose.isValidObjectId(conversationId)) {
@@ -105,7 +105,7 @@ export async function sendMessage(req, res) {
     }
 
 
-   
+
     if (typeof content !== "string" || !content.trim()) {
         throw new AppError("Message content is required", 400);
     }
@@ -117,17 +117,74 @@ export async function sendMessage(req, res) {
         );
     }
 
-    
+
     const message = await Message.create({
         conversation: conversation._id,
         sender: req.user._id,
         content: content.trim()
     });
 
-   
+
     return res.status(201).json({
         success: true,
         message: "Message sent successfully",
         data: { message }
     });
 }
+
+export async function getMessages(req, res) {
+    const { conversationId } = req.params;
+
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const skip = (page - 1) * limit;
+
+    if (!mongoose.isValidObjectId(conversationId)) {
+        throw new AppError("Invalid conversation ID", 400);
+    }
+
+
+    const conversation = await Conversation.findById(conversationId);
+
+    if (!conversation) {
+        throw new AppError("Conversation not found", 404);
+    }
+
+    const isParticipant = conversation.participants.some(
+        (participant) => participant.toString() === req.user._id.toString()
+    );
+
+    if (!isParticipant) {
+        throw new AppError(
+            "You are not authorized to access this conversation",
+            403
+        );
+    }
+
+    const [messages, totalMessages] = await Promise.all([
+        Message.find({ conversation: conversationId })
+            .sort({ createdAt: 1, _id: 1 })
+            .skip(skip)
+            .limit(limit),
+
+        Message.countDocuments({ conversation: conversationId })
+    ]);
+
+    return res.status(200).json({
+        success: true,
+        message: "Messages retrieved successfully",
+        data: {
+            messages,
+            pagination: {
+                page,
+                limit,
+                totalMessages,
+                totalPages: Math.ceil(totalMessages / limit)
+            }
+        }
+    });
+}
+
+
+
+
