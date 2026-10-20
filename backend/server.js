@@ -3,6 +3,7 @@ import app from "./app.js";
 import { connectdb } from "./config/db.js";
 import { Server } from "socket.io";
 import { socketAuth } from "./middleware/socketAuth.js";
+import { registerConversationHandler } from "./socket/conversationSocket.js";
 
 import { createServer } from "node:http";
 
@@ -17,6 +18,8 @@ io.use(socketAuth);
 io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
+    registerConversationHandler(io, socket);
+
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
     });
@@ -26,6 +29,6 @@ io.on("connection", (socket) => {
 
 await connectdb();
 
-httpServer.listen(3000,()=>{
+httpServer.listen(3000, () => {
     console.log("Server is running");
 });
