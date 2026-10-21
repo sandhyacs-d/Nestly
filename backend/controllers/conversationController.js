@@ -3,6 +3,7 @@ import Conversation from "../models/conversation.js";
 import Message from "../models/message.js";
 import RoommateRequest from "../models/roommateRequest.js";
 import { AppError } from "../errors/appError.js";
+import { createMessage } from "../services/messageService.js";
 
 export async function getOrCreateConversation(req, res) {
     const { requestId } = req.params;
@@ -78,52 +79,16 @@ export async function getOrCreateConversation(req, res) {
     });
 }
 
+
 export async function sendMessage(req, res) {
     const { conversationId } = req.params;
     const { content } = req.body;
 
-
-    if (!mongoose.isValidObjectId(conversationId)) {
-        throw new AppError("Invalid conversation ID", 400);
-    }
-
-    const conversation = await Conversation.findById(conversationId);
-
-    if (!conversation) {
-        throw new AppError("Conversation not found", 404);
-    }
-
-    const isParticipant = conversation.participants.some(
-        (participant) => participant.toString() === req.user._id.toString()
+    const message = await createMessage(
+        conversationId,
+        req.user._id,
+        content
     );
-
-    if (!isParticipant) {
-        throw new AppError(
-            "You are not authorized to send messages in this conversation",
-            403
-        );
-    }
-
-
-
-    if (typeof content !== "string" || !content.trim()) {
-        throw new AppError("Message content is required", 400);
-    }
-
-    if (content.trim().length > 2000) {
-        throw new AppError(
-            "Message cannot exceed 2000 characters",
-            400
-        );
-    }
-
-
-    const message = await Message.create({
-        conversation: conversation._id,
-        sender: req.user._id,
-        content: content.trim()
-    });
-
 
     return res.status(201).json({
         success: true,
@@ -131,6 +96,7 @@ export async function sendMessage(req, res) {
         data: { message }
     });
 }
+
 
 export async function getMessages(req, res) {
     const { conversationId } = req.params;
