@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+
 import app from "./app.js";
 import { connectdb } from "./config/db.js";
 import { Server } from "socket.io";
@@ -7,7 +7,7 @@ import { registerConversationHandler } from "./socket/conversationSocket.js";
 
 import { createServer } from "node:http";
 
-dotenv.config({ path: "../.env" });
+
 
 const httpServer = createServer(app);
 
