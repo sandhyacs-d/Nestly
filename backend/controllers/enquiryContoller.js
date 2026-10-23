@@ -3,6 +3,7 @@ import Enquiry from "../models/enquiry.js";
 import Property from "../models/property.js";
 import { AppError } from "../errors/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createNotification } from "../services/notificationService.js";
 
 export const createEnquiry = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
@@ -58,6 +59,17 @@ export const createEnquiry = asyncHandler(async (req, res) => {
             property: property._id,
             owner: property.owner,
             message: message.trim()
+        });
+
+
+
+        await createNotification({
+            recipient: enquiry.owner,
+            type: "enquiry_received",
+            message: "You received a new property enquiry.",
+            relatedUser: req.user._id,
+            relatedProperty: property._id,
+            relatedEnquiry: enquiry._id
         });
 
         res.status(201).json({
@@ -121,7 +133,7 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
     const { enquiryId } = req.params;
     const { status } = req.body;
 
-    
+
     if (!["accepted", "rejected"].includes(status)) {
         throw new AppError(
             "Status must be either accepted or rejected",
@@ -129,7 +141,7 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
         );
     }
 
-    
+
     const enquiry = await Enquiry.findOne({
         _id: enquiryId,
         owner: req.user._id
@@ -141,6 +153,17 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
 
     enquiry.status = status;
     await enquiry.save();
+
+
+    await createNotification({
+        recipient: enquiry.renter,
+        type: "enquiry_updated",
+        message: `Your property enquiry was ${status}.`,
+        relatedUser: req.user._id,
+        relatedProperty: enquiry.property,
+        relatedEnquiry: enquiry._id
+    });
+
 
     res.status(200).json({
         success: true,

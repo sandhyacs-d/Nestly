@@ -56,7 +56,7 @@ socket.on("disconnect", (reason) => {
     console.log("Socket disconnected:", reason);
 });
 
-// Detect a missing error response rather than waiting indefinitely.
+
 const timeout = setTimeout(() => {
     if (socket.connected) {
         console.error("Test inconclusive: no message:error response received.");

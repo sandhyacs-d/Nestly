@@ -3,6 +3,7 @@ import RoommateRequest from "../models/roommateRequest.js";
 import RoommateProfile from "../models/roommateProfile.js";
 import { AppError } from "../errors/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createNotification } from "../services/notificationService.js";
 
 export const createRoommateRequest = asyncHandler(async (req, res) => {
     const { recipientId } = req.params;
@@ -59,6 +60,14 @@ export const createRoommateRequest = asyncHandler(async (req, res) => {
             ...(message !== undefined && {
                 message: message.trim()
             })
+        });
+
+        await createNotification({
+            recipient: recipientId,
+            type: "roommate_request",
+            message: "You received a new roommate request.",
+            relatedUser: req.user._id,
+            relatedRoommateRequest: roommateRequest._id
         });
 
         return res.status(201).json({
@@ -139,6 +148,16 @@ export const updateRoommateRequestStatus = asyncHandler(async (req, res) => {
 
     request.status = status;
     await request.save();
+
+
+    await createNotification({
+        recipient: request.sender,
+        type: "roommate_request_updated",
+        message: `Your roommate request was ${status}.`,
+        relatedUser: req.user._id,
+        relatedRoommateRequest: request._id
+    });
+
 
     return res.status(200).json({
         success: true,
