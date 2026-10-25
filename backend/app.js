@@ -8,6 +8,7 @@ import enquiryRoutes from "./routes/enquiryRoutes.js";
 import roommateRouter from "./routes/roommateProfileRoutes.js";
 import roommateRequestRoutes from "./routes/roommateRequestRoutes.js";
 import conversationRouter from "./routes/conversationRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -30,6 +31,8 @@ app.use("/api/roommate-profiles",roommateRouter);
 app.use("/api/roommate-requests", roommateRequestRoutes);
 
 app.use("/api/conversations",conversationRouter);
+
+app.use("/api/notifications",notificationRouter);
 
 app.use(errorHandler);
 

@@ -3,7 +3,7 @@ import Enquiry from "../models/enquiry.js";
 import Property from "../models/property.js";
 import { AppError } from "../errors/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { createNotification } from "../services/notificationService.js";
+import { createNotificationSafely } from "../services/notificationService.js";
 
 export const createEnquiry = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
@@ -63,7 +63,7 @@ export const createEnquiry = asyncHandler(async (req, res) => {
 
 
 
-        await createNotification({
+        await createNotificationSafely({
             recipient: enquiry.owner,
             type: "enquiry_received",
             message: "You received a new property enquiry.",
@@ -155,7 +155,7 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
     await enquiry.save();
 
 
-    await createNotification({
+    await createNotificationSafely({
         recipient: enquiry.renter,
         type: "enquiry_updated",
         message: `Your property enquiry was ${status}.`,

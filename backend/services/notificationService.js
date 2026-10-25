@@ -22,3 +22,11 @@ export async function createNotification({
 
     return notification;
 }
+
+export async function createNotificationSafely(notificationData) {
+    try {
+        await createNotification(notificationData);
+    } catch (error) {
+        console.error("Failed to create notification:", error);
+    }
+}
