@@ -9,6 +9,7 @@ import roommateRouter from "./routes/roommateProfileRoutes.js";
 import roommateRequestRoutes from "./routes/roommateRequestRoutes.js";
 import conversationRouter from "./routes/conversationRoutes.js";
 import notificationRouter from "./routes/notificationRoutes.js";
+import adminRouter from "./routes/adminRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -33,6 +34,8 @@ app.use("/api/roommate-requests", roommateRequestRoutes);
 app.use("/api/conversations",conversationRouter);
 
 app.use("/api/notifications",notificationRouter);
+
+app.use("/api/admin", adminRouter);
 
 app.use(errorHandler);
 
