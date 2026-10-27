@@ -34,6 +34,17 @@ export async function authMiddleware(req, res, next) {
             throw new AppError("Password changed. Please log in again.", 401);
         }
 
+        if (user.isActive === false) {
+            throw new AppError("Your account is deactivated.", 403);
+        }
+
+        if (user.isSuspended === true) {
+            throw new AppError(
+                "Your account has been suspended. Please contact support.",
+                403
+            );
+        }
+
         req.user = user;
 
         next();

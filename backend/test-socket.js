@@ -58,11 +58,12 @@ socket.on("disconnect", (reason) => {
 
 
 const timeout = setTimeout(() => {
-    if (socket.connected) {
-        console.error("Test inconclusive: no message:error response received.");
-        socket.disconnect();
-    }
+    console.error("Test timed out: expected a rejection response was not received.");
+    socket.disconnect();
+    process.exitCode = 1;
 }, 5000);
+
+socket.on("disconnect", () => clearTimeout(timeout));
 
 socket.on("disconnect", () => clearTimeout(timeout));
 

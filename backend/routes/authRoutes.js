@@ -4,7 +4,7 @@ import { validateRegister } from "../middleware/validateRegister.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateLogin } from "../middleware/validateLogin.js";
 import { authMiddleware } from "../middleware/protect.js";
-import { validateProfileUpdate } from "../middleware/validateProfileUpdate.js";
+
 
 
 const router = express.Router();

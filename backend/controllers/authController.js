@@ -2,6 +2,8 @@ import { AppError } from "../errors/appError.js";
 import User from "../models/user.js"
 import { generateToken } from "../utils/jwt.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
+import { getIO } from "../socket/io.js";
+import { disconnectUserSockets } from "../socket/disconnectUserSocket.js";
 
 export async function registerUser(req, res) {
     const { name, email, password } = req.body;
@@ -42,6 +44,19 @@ export async function loginUser(req, res) {
         throw new AppError("Invalid email or password", 401);
     }
 
+    if (user.isSuspended === true) {
+        throw new AppError(
+            "Your account has been suspended. Please contact support.",
+            403
+        );
+    }
+
+    if (user.isActive === false) {
+        throw new AppError(
+            "Your account is deactivated. Please reactivate it to continue.",
+            403
+        );
+    }
 
     const token = generateToken(user._id);
 
@@ -119,11 +134,88 @@ export async function changePassword(req, res) {
 
     user.password = await hashPassword(req.body.newPassword);
     user.passwordChangedAt = new Date();
-    
+
     await user.save();
 
     return res.status(200).json({
         success: true,
         message: "Password changed successfully"
+    });
+}
+
+export async function reactivateMyAccount(req, res) {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        throw new AppError("Email and password are required", 400);
+    }
+
+    const user = await User.findOne({
+        email: email.trim().toLowerCase()
+    });
+
+    if (!user) {
+        throw new AppError("Invalid email or password", 401);
+    }
+
+    const validPassword = await verifyPassword(password, user.password);
+
+    if (!validPassword) {
+        throw new AppError("Invalid email or password", 401);
+    }
+
+    if (user.isSuspended === true) {
+        throw new AppError(
+            "Your account has been suspended. Please contact support.",
+            403
+        );
+    }
+
+    if (user.isActive !== false) {
+        throw new AppError("Your account is already active", 400);
+    }
+
+    user.isActive = true;
+    await user.save();
+
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+        success: true,
+        message: "Account reactivated successfully",
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isActive: user.isActive
+        },
+        token
+    });
+}
+
+export async function deactivateMyAccount(req, res) {
+    const user = req.user;
+
+    if (user.role === "admin") {
+        throw new AppError(
+            "Admin accounts cannot be deactivated through this endpoint",
+            400
+        );
+    }
+
+    if (user.isActive === false) {
+        throw new AppError("Your account is already deactivated", 400);
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    const io = getIO();
+    await disconnectUserSockets(io, user._id);
+
+    return res.status(200).json({
+        success: true,
+        message: "Account deactivated successfully"
     });
 }

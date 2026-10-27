@@ -13,7 +13,7 @@ export async function socketAuth(socket, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const user = await User.findById(decoded.userId)
-            .select("_id role passwordChangedAt");
+            .select("_id role passwordChangedAt isActive isSuspended");
 
         if (!user) {
             return next(new Error("Invalid or expired token"));
@@ -26,6 +26,16 @@ export async function socketAuth(socket, next) {
         ) {
             return next(
                 new Error("Password changed. Please log in again.")
+            );
+        }
+
+        if (user.isActive === false) {
+            return next(new Error("Your account is deactivated."));
+        }
+
+        if (user.isSuspended === true) {
+            return next(
+                new Error("Your account has been suspended. Please contact support.")
             );
         }
 

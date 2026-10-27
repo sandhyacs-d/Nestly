@@ -1,6 +1,8 @@
 
 import User from "../models/user.js";
 import mongoose from "mongoose";
+import { getIO } from "../socket/io.js";
+import { disconnectUserSockets } from "../socket/disconnectUserSocket.js";
 
 export async function getAllUsers(req, res) {
     const page = Number.parseInt(req.query.page, 10) || 1;
@@ -103,5 +105,66 @@ export async function updateUserRole(req, res) {
         success: true,
         message: "User role updated successfully",
         data: { user: safeUser }
+    });
+}
+
+
+export async function setUserSuspensionStatus(req, res) {
+    const { id } = req.params;
+    const { isSuspended } = req.body;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid user ID"
+        });
+    }
+
+    if (typeof isSuspended !== "boolean") {
+        return res.status(400).json({
+            success: false,
+            message: "isSuspended must be a boolean"
+        });
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        });
+    }
+
+    if (user.role === "admin") {
+        return res.status(400).json({
+            success: false,
+            message: "Admin accounts cannot be suspended through this endpoint"
+        });
+    }
+
+    user.isSuspended = isSuspended;
+    await user.save();
+
+    if (isSuspended) {
+        const io = getIO();
+        await disconnectUserSockets(io, user._id);
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: isSuspended
+            ? "User account suspended successfully"
+            : "User account suspension lifted successfully",
+        data: {
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive,
+                isSuspended: user.isSuspended
+            }
+        }
     });
 }
