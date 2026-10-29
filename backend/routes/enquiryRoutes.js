@@ -1,5 +1,5 @@
 import express from "express";
-import { createEnquiry , getSentEnquiries , getReceivedEnquiries, updateEnquiryStatus} from "../controllers/enquiryContoller.js";
+import { createEnquiry , getSentEnquiries , getReceivedEnquiries, updateEnquiryStatus} from "../controllers/enquiryController.js";
 import { authMiddleware } from "../middleware/protect.js";
 
 const router = express.Router();

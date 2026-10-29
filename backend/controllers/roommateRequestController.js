@@ -107,10 +107,10 @@ export const getReceivedRoommateRequests = asyncHandler(async (req, res) => {
     });
 });
 
+
 export const updateRoommateRequestStatus = asyncHandler(async (req, res) => {
     const { requestId } = req.params;
     const { status } = req.body;
-
 
     if (!mongoose.isValidObjectId(requestId)) {
         throw new AppError("Invalid roommate request ID", 400);
@@ -130,25 +130,34 @@ export const updateRoommateRequestStatus = asyncHandler(async (req, res) => {
         );
     }
 
-    const request = await RoommateRequest.findOne({
-        _id: requestId,
-        recipient: req.user._id
-    });
+    const request = await RoommateRequest.findOneAndUpdate(
+        {
+            _id: requestId,
+            recipient: req.user._id,
+            status: "pending"
+        },
+        { $set: { status } },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
 
     if (!request) {
-        throw new AppError("Roommate Request not found", 404);
-    }
+        const existingRequest = await RoommateRequest.findOne({
+            _id: requestId,
+            recipient: req.user._id
+        }).select("_id status");
 
-    if (request.status !== "pending") {
+        if (!existingRequest) {
+            throw new AppError("Roommate request not found", 404);
+        }
+
         throw new AppError(
             "This request has already been processed",
             409
         );
     }
-
-    request.status = status;
-    await request.save();
-
 
     await createNotificationSafely({
         recipient: request.sender,
@@ -158,12 +167,9 @@ export const updateRoommateRequestStatus = asyncHandler(async (req, res) => {
         relatedRoommateRequest: request._id
     });
 
-
     return res.status(200).json({
         success: true,
         message: `Roommate request ${status} successfully`,
         data: { request }
     });
-
 });
-

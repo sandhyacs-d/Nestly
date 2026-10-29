@@ -1,11 +1,20 @@
 
 import mongoose from "mongoose";
 import Conversation from "../models/conversation.js";
+import { verifySocketUser } from "./verifySocketUser.js";
 import { createMessage } from "../services/messageService.js";
 
 export function registerConversationHandler(io, socket) {
     socket.on("conversation:join", async (conversationId) => {
         try {
+
+            const isAuthorized = await verifySocketUser(socket.data.userId);
+
+            if (!isAuthorized) {
+                socket.disconnect(true);
+                return;
+            }
+
             if (!mongoose.isValidObjectId(conversationId)) {
                 return socket.emit("conversation:error", {
                     message: "Invalid conversation ID"

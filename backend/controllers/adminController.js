@@ -65,6 +65,7 @@ export async function getUserById(req, res) {
     });
 }
 
+
 export async function updateUserRole(req, res) {
     const { id } = req.params;
     const { role } = req.body;
@@ -85,6 +86,14 @@ export async function updateUserRole(req, res) {
         });
     }
 
+    
+    if (req.user._id.toString() === id) {
+        return res.status(403).json({
+            success: false,
+            message: "You cannot change your own role"
+        });
+    }
+
     const user = await User.findById(id);
 
     if (!user) {
@@ -94,8 +103,30 @@ export async function updateUserRole(req, res) {
         });
     }
 
+    
+    if (user.role === "admin") {
+        const adminCount = await User.countDocuments({
+            role: "admin"
+        });
+
+        if (adminCount <= 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot demote the last administrator"
+            });
+        }
+    }
+
+    const roleChanged = user.role !== role;
+
     user.role = role;
     await user.save();
+
+    
+    if (roleChanged) {
+        const io = getIO();
+        await disconnectUserSockets(io, user._id);
+    }
 
     const safeUser = user.toObject();
     delete safeUser.password;
@@ -107,6 +138,7 @@ export async function updateUserRole(req, res) {
         data: { user: safeUser }
     });
 }
+
 
 
 export async function setUserSuspensionStatus(req, res) {

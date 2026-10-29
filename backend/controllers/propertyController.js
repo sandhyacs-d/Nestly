@@ -105,7 +105,10 @@ export async function getProperties(req, res) {
 export async function getPropertyById(req, res) {
     const id = req.params.id;
 
-    const property = await Property.findById(id);
+    const property = await Property.findOne({
+        _id: id,
+        status: "active"
+    });
 
     if (!property) {
         throw new AppError("Property not found", 404);

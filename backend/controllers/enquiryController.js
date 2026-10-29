@@ -1,14 +1,26 @@
 
 import Enquiry from "../models/enquiry.js";
 import Property from "../models/property.js";
+import mongoose from "mongoose";
 import { AppError } from "../errors/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createNotificationSafely } from "../services/notificationService.js";
+
 
 export const createEnquiry = asyncHandler(async (req, res) => {
     const { propertyId } = req.params;
     const { message } = req.body;
 
+    if (req.user.role !== "renter") {
+        throw new AppError(
+            "Only renters can submit property enquiries",
+            403
+        );
+    }
+
+    if (!mongoose.isValidObjectId(propertyId)) {
+        throw new AppError("Invalid property ID", 400);
+    }
 
     if (typeof message !== "string" || !message.trim()) {
         throw new AppError("Please provide an enquiry message", 400);
@@ -17,7 +29,6 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     if (message.trim().length > 1000) {
         throw new AppError("Message cannot exceed 1000 characters", 400);
     }
-
 
     const property = await Property.findById(propertyId);
 
@@ -32,14 +43,12 @@ export const createEnquiry = asyncHandler(async (req, res) => {
         );
     }
 
-
     if (property.owner.toString() === req.user._id.toString()) {
         throw new AppError(
             "You cannot enquire about your own property",
             403
         );
     }
-
 
     const existingEnquiry = await Enquiry.findOne({
         renter: req.user._id,
@@ -61,8 +70,6 @@ export const createEnquiry = asyncHandler(async (req, res) => {
             message: message.trim()
         });
 
-
-
         await createNotificationSafely({
             recipient: enquiry.owner,
             type: "enquiry_received",
@@ -72,15 +79,12 @@ export const createEnquiry = asyncHandler(async (req, res) => {
             relatedEnquiry: enquiry._id
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "Enquiry submitted successfully",
-            data: {
-                enquiry
-            }
+            data: { enquiry }
         });
     } catch (error) {
-
         if (error.code === 11000) {
             throw new AppError(
                 "You have already enquired about this property",
@@ -92,7 +96,6 @@ export const createEnquiry = asyncHandler(async (req, res) => {
     }
 });
 
-
 export const getSentEnquiries = asyncHandler(async (req, res) => {
     const enquiries = await Enquiry.find({
         renter: req.user._id
@@ -101,15 +104,12 @@ export const getSentEnquiries = asyncHandler(async (req, res) => {
         .populate("owner", "name email")
         .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
-        results: enquiries.length,
-        data: {
-            enquiries
-        }
+        count: enquiries.length,
+        data: { enquiries }
     });
 });
-
 
 export const getReceivedEnquiries = asyncHandler(async (req, res) => {
     const enquiries = await Enquiry.find({
@@ -129,10 +129,24 @@ export const getReceivedEnquiries = asyncHandler(async (req, res) => {
 });
 
 
+
+
+
+
 export const updateEnquiryStatus = asyncHandler(async (req, res) => {
     const { enquiryId } = req.params;
     const { status } = req.body;
 
+    if (!mongoose.isValidObjectId(enquiryId)) {
+        throw new AppError("Invalid enquiry ID", 400);
+    }
+
+    if (req.user.role !== "owner") {
+        throw new AppError(
+            "Only property owners can update enquiry status",
+            403
+        );
+    }
 
     if (!["accepted", "rejected"].includes(status)) {
         throw new AppError(
@@ -141,19 +155,34 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
         );
     }
 
-
-    const enquiry = await Enquiry.findOne({
-        _id: enquiryId,
-        owner: req.user._id
-    });
+    const enquiry = await Enquiry.findOneAndUpdate(
+        {
+            _id: enquiryId,
+            owner: req.user._id,
+            status: "pending"
+        },
+        { $set: { status } },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
 
     if (!enquiry) {
-        throw new AppError("Enquiry not found", 404);
+        const existingEnquiry = await Enquiry.findOne({
+            _id: enquiryId,
+            owner: req.user._id
+        }).select("_id status");
+
+        if (!existingEnquiry) {
+            throw new AppError("Enquiry not found", 404);
+        }
+
+        throw new AppError(
+            "This enquiry has already been processed",
+            409
+        );
     }
-
-    enquiry.status = status;
-    await enquiry.save();
-
 
     await createNotificationSafely({
         recipient: enquiry.renter,
@@ -164,13 +193,10 @@ export const updateEnquiryStatus = asyncHandler(async (req, res) => {
         relatedEnquiry: enquiry._id
     });
 
-
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Enquiry status updated successfully",
-        data: {
-            enquiry
-        }
+        data: { enquiry }
     });
 });
 

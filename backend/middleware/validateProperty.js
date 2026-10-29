@@ -175,6 +175,10 @@ export function validateProperty(req, res, next) {
             throw new AppError("Amenities must be an array", 400);
         }
 
+        if (amenities.length > 30) {
+            throw new AppError("Cannot add more than 30 amenities", 400);
+        }
+
         for (const amenity of amenities) {
 
             if (typeof amenity !== "string") {
@@ -195,6 +199,10 @@ export function validateProperty(req, res, next) {
 
         if (!Array.isArray(images)) {
             throw new AppError("Images must be an array", 400);
+        }
+
+        if (images.length > 10) {
+            throw new AppError("Cannot add more than 10 images", 400);
         }
 
         for (const image of images) {

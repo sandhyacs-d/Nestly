@@ -1,5 +1,5 @@
 import express from "express";
-import { loginUser, registerUser, getMe, updateMe } from "../controllers/authController.js";
+import { loginUser, registerUser, getMe } from "../controllers/authController.js";
 import { validateRegister } from "../middleware/validateRegister.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateLogin } from "../middleware/validateLogin.js";
