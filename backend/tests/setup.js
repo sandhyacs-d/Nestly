@@ -4,6 +4,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 
 let mongoServer;
 
+process.env.JWT_SECRET = "nestly-test-secret-only";
+
 export async function connectTestDB() {
     mongoServer = await MongoMemoryServer.create();
 

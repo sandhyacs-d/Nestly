@@ -16,7 +16,7 @@ import {
     closeTestDB
 } from "./setup.js";
 
-process.env.JWT_SECRET = "test-secret-key";
+process.env.JWT_SECRET;
 
 let owner;
 let renter;

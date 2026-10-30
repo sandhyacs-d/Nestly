@@ -138,7 +138,7 @@ export const updateRoommateRequestStatus = asyncHandler(async (req, res) => {
         },
         { $set: { status } },
         {
-            new: true,
+            returnDocument: "after",
             runValidators: true
         }
     );
