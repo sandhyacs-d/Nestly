@@ -11,3 +11,7 @@ export function getIO() {
 
     return io;
 }
+
+export function clearIO() {
+    io = null;
+}
