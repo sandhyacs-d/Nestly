@@ -5,10 +5,21 @@ import { AppError } from "../errors/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export async function getNotifications(req, res) {
-    const page = Number.parseInt(req.query.page, 10) || 1;
-    const limit = Number.parseInt(req.query.limit, 10) || 20;
+    const page = req.query.page === undefined
+        ? 1
+        : Number(req.query.page);
 
-    if (page < 1 || limit < 1 || limit > 50) {
+    const limit = req.query.limit === undefined
+        ? 20
+        : Number(req.query.limit);
+
+    if (
+        !Number.isInteger(page) ||
+        !Number.isInteger(limit) ||
+        page < 1 ||
+        limit < 1 ||
+        limit > 50
+    ) {
         throw new AppError(
             "Page must be at least 1 and limit must be between 1 and 50",
             400
@@ -41,7 +52,7 @@ export async function getNotifications(req, res) {
 };
 
 
-export async function markNotificationAsRead(req, res){
+export async function markNotificationAsRead(req, res) {
     const { notificationId } = req.params;
 
     if (!mongoose.isValidObjectId(notificationId)) {
@@ -57,7 +68,7 @@ export async function markNotificationAsRead(req, res){
             isRead: true
         },
         {
-            returnDocument:"after",
+            returnDocument: "after",
             runValidators: true
         }
     );
