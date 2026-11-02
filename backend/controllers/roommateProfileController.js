@@ -3,6 +3,22 @@ import RoommateProfile from "../models/roommateProfile.js";
 import { AppError } from "../errors/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+
+function validateLifestyle(lifestyle) {
+    if (
+        lifestyle !== undefined &&
+        (
+            !Array.isArray(lifestyle) ||
+            lifestyle.some(
+                item => typeof item !== "string" || !item.trim()
+            )
+        )
+    ) {
+        throw new AppError("Lifestyle must be an array of non-empty strings", 400);
+    }
+}
+
+
 export const createRoommateProfile = asyncHandler(async (req, res) => {
     if (req.user.role !== "renter") {
         throw new AppError("Only renters can create roommate profiles", 403);
@@ -17,6 +33,8 @@ export const createRoommateProfile = asyncHandler(async (req, res) => {
         lifestyle,
         moveInDate
     } = req.body;
+
+    validateLifestyle(lifestyle);
 
     // Validate required fields
     if (
@@ -82,6 +100,8 @@ export const updateRoommateProfile = asyncHandler(async (req, res) => {
         moveInDate,
         isActive
     } = req.body;
+
+    validateLifestyle(lifestyle);
 
 
     const profile = await RoommateProfile.findOne({
