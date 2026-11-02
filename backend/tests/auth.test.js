@@ -269,3 +269,4 @@ test("rejects access when the user's account is suspended", async () => {
 
     assert.equal(response.status, 403);
 });
+
