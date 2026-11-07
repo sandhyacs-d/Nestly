@@ -31,11 +31,14 @@ let serverAddress;
 let sender;
 let recipient;
 let outsider;
+let admin;
+
 
 let conversation;
 let senderToken;
 let recipientToken;
 let outsiderToken;
+let adminToken;
 
 const clients = new Set();
 
@@ -162,6 +165,14 @@ beforeEach(async () => {
         password: hashedPassword
     });
 
+    admin = await User.create({
+    name: "Admin",
+    email: "admin@test.com",
+    password: hashedPassword,
+    role: "admin"
+});
+
+    adminToken = createToken(admin);
     senderToken = createToken(sender);
     recipientToken = createToken(recipient);
     outsiderToken = createToken(outsider);
@@ -528,6 +539,50 @@ test("should disconnect existing sockets after account deactivation", async () =
     const response = await request(app)
         .patch("/api/users/me/status")
         .set("Authorization", `Bearer ${senderToken}`);
+
+    assert.equal(response.status, 200);
+
+    const [reason] = await disconnectPromise;
+
+    assert.equal(reason, "io server disconnect");
+    assert.equal(client.connected, false);
+});
+
+test("should disconnect existing sockets after admin suspends a user", async () => {
+    const client = connectClient(senderToken);
+
+    await connectSuccessfully(client);
+
+    const disconnectPromise = waitForEvent(client, "disconnect");
+
+    const response = await request(app)
+        .patch(`/api/admin/users/${sender._id}/status`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+            isSuspended: true
+        });
+
+    assert.equal(response.status, 200);
+
+    const [reason] = await disconnectPromise;
+
+    assert.equal(reason, "io server disconnect");
+    assert.equal(client.connected, false);
+});
+
+test("should disconnect existing sockets after an admin changes a user's role", async () => {
+    const client = connectClient(senderToken);
+
+    await connectSuccessfully(client);
+
+    const disconnectPromise = waitForEvent(client, "disconnect");
+
+    const response = await request(app)
+        .patch(`/api/admin/users/${sender._id}/role`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+            role: "owner"
+        });
 
     assert.equal(response.status, 200);
 
