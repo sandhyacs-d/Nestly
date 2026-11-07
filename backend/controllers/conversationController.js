@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Conversation from "../models/conversation.js";
 import Message from "../models/message.js";
 import RoommateRequest from "../models/roommateRequest.js";
+import { getIO } from "../socket/io.js";
 import { AppError } from "../errors/appError.js";
 import { createMessage } from "../services/messageService.js";
 
@@ -90,13 +91,19 @@ export async function sendMessage(req, res) {
         content
     );
 
+
+    const io = getIO();
+
+    io.to(message.conversation.toString()).emit("message:new", {
+        message
+    });
+
     return res.status(201).json({
         success: true,
         message: "Message sent successfully",
         data: { message }
     });
 }
-
 
 export async function getMessages(req, res) {
     const { conversationId } = req.params;

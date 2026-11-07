@@ -3,6 +3,7 @@ import { test, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import jwt from "jsonwebtoken";
 import request from "supertest";
+import { setIO, clearIO } from "../socket/io.js";
 
 import app from "../app.js";
 import User from "../models/user.js";
@@ -23,6 +24,7 @@ let conversation;
 let senderToken;
 let recipientToken;
 let outsiderToken;
+let emittedEvents = [];
 
 function createToken(user) {
     return jwt.sign(
@@ -46,11 +48,28 @@ async function createTestConversation() {
     });
 }
 
+
 before(async () => {
     await connectTestDB();
+
+    setIO({
+        to(roomId) {
+            return {
+                emit(eventName, payload) {
+                    emittedEvents.push({
+                        roomId,
+                        eventName,
+                        payload
+                    });
+                }
+            };
+        }
+    });
 });
 
 beforeEach(async () => {
+    emittedEvents = [];
+
     await clearTestDB();
 
     sender = await User.create({
@@ -79,6 +98,7 @@ beforeEach(async () => {
 });
 
 after(async () => {
+    clearIO();
     await closeTestDB();
 });
 
@@ -101,6 +121,38 @@ test("should send a message successfully", async () => {
     );
 
     assert.ok(message);
+});
+
+test("should broadcast REST-sent messages to the conversation room", async () => {
+    const response = await request(app)
+        .post(`/api/conversations/${conversation._id}/messages`)
+        .set("Authorization", `Bearer ${senderToken}`)
+        .send({ content: "REST broadcast test" });
+
+    assert.equal(response.status, 201);
+    assert.equal(emittedEvents.length, 1);
+
+    assert.equal(
+        emittedEvents[0].roomId,
+        conversation._id.toString()
+    );
+
+    assert.equal(emittedEvents[0].eventName, "message:new");
+
+    assert.equal(
+        emittedEvents[0].payload.message._id.toString(),
+        response.body.data.message._id
+    );
+});
+
+test("should not broadcast a message from a non-participant", async () => {
+    const response = await request(app)
+        .post(`/api/conversations/${conversation._id}/messages`)
+        .set("Authorization", `Bearer ${outsiderToken}`)
+        .send({ content: "Unauthorized message" });
+
+    assert.equal(response.status, 403);
+    assert.equal(emittedEvents.length, 0);
 });
 
 test("should trim whitespace from message content", async () => {

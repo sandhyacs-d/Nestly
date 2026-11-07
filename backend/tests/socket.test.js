@@ -5,6 +5,9 @@ import jwt from "jsonwebtoken";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { io as ioClient } from "socket.io-client";
+import request from "supertest";
+import { setIO, clearIO } from "../socket/io.js";
+import { hashPassword } from "../utils/password.js";
 
 import app from "../app.js";
 import User from "../models/user.js";
@@ -116,6 +119,8 @@ before(async () => {
     httpServer = createServer(app);
     ioServer = new Server(httpServer);
 
+    setIO(ioServer);
+
     ioServer.use(socketAuth);
 
     ioServer.on("connection", async (socket) => {
@@ -137,22 +142,24 @@ before(async () => {
 beforeEach(async () => {
     await clearTestDB();
 
+    const hashedPassword = await hashPassword("test-password");
+
     sender = await User.create({
         name: "Sender",
         email: "sender@test.com",
-        password: "test-password"
+        password: hashedPassword
     });
 
     recipient = await User.create({
         name: "Recipient",
         email: "recipient@test.com",
-        password: "test-password"
+        password: hashedPassword
     });
 
     outsider = await User.create({
         name: "Outsider",
         email: "outsider@test.com",
-        password: "test-password"
+        password: hashedPassword
     });
 
     senderToken = createToken(sender);
@@ -172,6 +179,8 @@ after(async () => {
     if (ioServer) {
         await new Promise(resolve => ioServer.close(resolve));
     }
+
+    clearIO();
 
     await closeTestDB();
 });
@@ -479,4 +488,51 @@ test("should stop delivering messages after a participant disconnects", async ()
 
     assert.equal(result.message.content, "After disconnect");
     assert.equal(await Message.countDocuments(), 1);
+});
+
+test("should disconnect existing sockets after a password change", async () => {
+    const client = connectClient(senderToken);
+
+    await connectSuccessfully(client);
+
+    const disconnectPromise = waitForEvent(client, "disconnect");
+
+    const response = await request(app)
+        .patch("/api/users/me/password")
+        .set("Authorization", `Bearer ${senderToken}`)
+        .send({
+            currentPassword: "test-password",
+            newPassword: "new-test-password"
+        });
+
+
+    assert.equal(response.status, 200);
+    assert.equal(
+        response.body.message,
+        "Password changed successfully"
+    );
+
+    const [reason] = await disconnectPromise;
+
+    assert.equal(reason, "io server disconnect");
+    assert.equal(client.connected, false);
+});
+
+test("should disconnect existing sockets after account deactivation", async () => {
+    const client = connectClient(senderToken);
+
+    await connectSuccessfully(client);
+
+    const disconnectPromise = waitForEvent(client, "disconnect");
+
+    const response = await request(app)
+        .patch("/api/users/me/status")
+        .set("Authorization", `Bearer ${senderToken}`);
+
+    assert.equal(response.status, 200);
+
+    const [reason] = await disconnectPromise;
+
+    assert.equal(reason, "io server disconnect");
+    assert.equal(client.connected, false);
 });

@@ -137,6 +137,9 @@ export async function changePassword(req, res) {
 
     await user.save();
 
+    const io = getIO();
+    await disconnectUserSockets(io, user._id);
+
     return res.status(200).json({
         success: true,
         message: "Password changed successfully"
