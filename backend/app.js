@@ -1,4 +1,6 @@
 import express from "express";
+import cors from "cors";
+import helmet from "helmet";
 import testRouter from "./routes/testRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import propertyRouter from "./routes/propertyRoutes.js";
@@ -11,10 +13,21 @@ import conversationRouter from "./routes/conversationRoutes.js";
 import notificationRouter from "./routes/notificationRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 
-app.use(express.json());
+app.use(helmet());
+
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL,
+    })
+);
+
+app.use(express.json({ limit: "10kb" }));
+
+app.use("/api", apiLimiter);
 
 app.use("/api/test",testRouter);
 app.use("/api/auth",authRouter);
