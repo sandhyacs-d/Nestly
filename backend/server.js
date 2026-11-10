@@ -1,6 +1,6 @@
 
 import app from "./app.js";
-import { connectdb } from "./config/db.js";
+import { connectdb , disconnectdb } from "./config/db.js";
 import { Server } from "socket.io";
 import { socketAuth } from "./middleware/socketAuth.js";
 import { setIO } from "./socket/io.js";
@@ -12,7 +12,12 @@ import { createServer } from "node:http";
 
 const httpServer = createServer(app);
 
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.CLIENT_URL,
+        methods: ["GET", "POST"],
+    },
+});
 
 setIO(io);
 
@@ -36,6 +41,31 @@ io.on("connection", async (socket) => {
 
 await connectdb();
 
-httpServer.listen(3000, () => {
-    console.log("Server is running");
+const PORT = process.env.PORT || 3000;
+
+httpServer.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
+
+let isShuttingDown = false;
+
+async function shutdown(signal) {
+    if (isShuttingDown) return;
+
+    isShuttingDown = true;
+    console.log(`${signal} received. Shutting down gracefully...`);
+
+    io.close(async () => {
+        try {
+            await disconnectdb();
+            console.log("MongoDB disconnected.");
+            process.exit(0);
+        } catch (error) {
+            console.error("Error during shutdown:", error);
+            process.exit(1);
+        }
+    });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
