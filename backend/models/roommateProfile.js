@@ -54,6 +54,7 @@ const roommateProfileSchema = new mongoose.Schema(
 );
 
 roommateProfileSchema.index({ user: 1 }, { unique: true });
+roommateProfileSchema.index({ isActive: 1, createdAt: -1 });
 
 const RoommateProfile = mongoose.model("RoommateProfile",roommateProfileSchema);
 

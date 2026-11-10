@@ -61,6 +61,10 @@ const propertySchema = new mongoose.Schema({
         timestamps : true
 });
 
+propertySchema.index({ status: 1, createdAt: -1 });
+propertySchema.index({ status: 1, price: 1 });
+
+
 const Property = mongoose.model("Property",propertySchema);
 
 export default Property;
