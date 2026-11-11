@@ -14,6 +14,8 @@ import notificationRouter from "./routes/notificationRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger.js";
 
 const app = express();
 
@@ -25,9 +27,12 @@ app.use(
     })
 );
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use(express.json({ limit: "10kb" }));
 
 app.use("/api", apiLimiter);
+
 
 app.use("/api/test",testRouter);
 app.use("/api/auth",authRouter);
