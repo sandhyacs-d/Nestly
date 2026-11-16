@@ -9,12 +9,16 @@ const swaggerOptions = {
             version: "1.0.0",
             description: "API documentation for the Nestly rental and roommate platform"
         },
-        servers: [
-            {
-                url: "http://localhost:3000",
-                description: "Development server"
-            }
-        ],
+       servers: [
+    {
+        url: "https://nestly-api-aeno.onrender.com",
+        description: "Production server"
+    },
+    {
+        url: "http://localhost:3000",
+        description: "Development server"
+    }
+],
         components: {
             securitySchemes: {
                 bearerAuth: {
