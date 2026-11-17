@@ -1,11 +1,20 @@
 
 import { createContext, useContext, useState } from 'react'
-import { loginUser } from '../features/auth/authService.js'
+import { loginUser } from '../features/auth/authService'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem('nestly_user')
+
+    try {
+      return storedUser ? JSON.parse(storedUser) : null
+    } catch {
+      return null
+    }
+  })
+
   const [token, setToken] = useState(
     () => localStorage.getItem('nestly_token')
   )
@@ -14,6 +23,7 @@ export function AuthProvider({ children }) {
     const data = await loginUser(credentials)
 
     localStorage.setItem('nestly_token', data.token)
+    localStorage.setItem('nestly_user', JSON.stringify(data.user))
 
     setToken(data.token)
     setUser(data.user)
@@ -23,6 +33,8 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('nestly_token')
+    localStorage.removeItem('nestly_user')
+
     setToken(null)
     setUser(null)
   }
