@@ -3,11 +3,12 @@ import Login from '../features/auth/login.jsx'
 import Register from '../features/auth/Register.jsx'
 import ProtectedRoute from '../components/common/ProtectedRoute.jsx'
 import PublicRoute from '../components/common/PublicRoute.jsx'
+import Home from '../features/properties/pages/home.jsx'
 
 function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<h1>Home</h1>} />
+      <Route path="/" element={<Home />} />
 
       <Route
         path="/login"
