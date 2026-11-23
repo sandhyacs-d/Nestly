@@ -161,6 +161,8 @@ button {
   overflow: hidden;
   background: #ffffff;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .property-card:hover {
@@ -300,5 +302,162 @@ button {
 @media (max-width: 480px) {
   .filter-group {
     min-width: 100%;
+  }
+}
+
+/* Property Details Page */
+
+.property-details-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.property-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.property-details-location {
+  color: #777;
+  margin-bottom: 0.5rem;
+}
+
+.property-details-header h1 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.property-details-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.property-details-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.property-details-gallery img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.property-details-placeholder {
+  grid-column: 1 / -1;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0eee9;
+  color: #777;
+  border-radius: 12px;
+}
+
+.property-details-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.property-details-main h2 {
+  margin: 2rem 0 1rem;
+}
+
+.property-details-main > p {
+  color: #555;
+  line-height: 1.8;
+}
+
+.property-details-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  padding: 1.5rem 0;
+  margin: 1.5rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.property-details-specs div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.property-details-specs strong {
+  font-size: 1.1rem;
+  text-transform: capitalize;
+}
+
+.property-details-specs span {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.property-details-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.property-details-features span {
+  padding: 0.7rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.property-amenities {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.property-amenities li {
+  padding: 0.75rem;
+  background: #f7f7f5;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .property-details-page {
+    padding: 1.25rem;
+  }
+
+  .property-details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .property-details-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .property-details-price {
+    font-size: 1.25rem;
+  }
+
+  .property-details-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .property-details-gallery img {
+    height: 240px;
+  }
+
+  .property-details-specs {
+    gap: 1.5rem;
   }
 }

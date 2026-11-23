@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom'
 
 function PropertyCard({ property }) {
   const formattedPrice = Number(property.price).toLocaleString('en-IN')
 
   return (
-    <article className="property-card">
+    <Link to={`/properties/${property._id}`} className="property-card">
       <div className="property-image">
         {property.images?.length > 0 ? (
           <img
@@ -40,7 +41,7 @@ function PropertyCard({ property }) {
           {property.kitchen && <span>Kitchen</span>}
         </div>
       </div>
-    </article>
+    </Link>
   )
 }
 
