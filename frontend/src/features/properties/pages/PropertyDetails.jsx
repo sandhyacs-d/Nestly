@@ -13,7 +13,7 @@ function PropertyDetails() {
     const fetchProperty = async () => {
       try {
         const data = await getPropertyById(id)
-        setProperty(data.property)
+        setProperty(data)
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load property.')
       } finally {

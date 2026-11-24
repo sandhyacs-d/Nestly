@@ -461,3 +461,100 @@ button {
     gap: 1.5rem;
   }
 }
+
+/* Create Property Page */
+.create-property-page {
+  max-width: 850px;
+  margin: 50px auto;
+  padding: 0 24px;
+}
+
+.create-property-page > h1 {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.create-property-page > p {
+  color: #666;
+  margin-bottom: 32px;
+}
+
+.property-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.property-form section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.property-form section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.property-form label {
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.property-form input:not([type="checkbox"]),
+.property-form textarea,
+.property-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.property-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.property-form input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.property-form button {
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #256b50;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.property-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.property-form .error-message {
+  color: #c62828;
+}
+
+.property-form .success-message {
+  color: #256b50;
+}
+
+@media (max-width: 600px) {
+  .create-property-page {
+    margin: 30px auto;
+    padding: 0 16px;
+  }
+
+  .property-form section {
+    padding: 18px;
+  }
+}

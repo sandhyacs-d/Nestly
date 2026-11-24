@@ -5,12 +5,22 @@ import ProtectedRoute from '../components/common/ProtectedRoute.jsx'
 import PublicRoute from '../components/common/PublicRoute.jsx'
 import Home from '../features/properties/pages/home.jsx'
 import PropertyDetails from '../features/properties/pages/PropertyDetails'
+import CreateProperty from '../features/properties/pages/CreateProperty'
 
 function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/properties/:id" element={<PropertyDetails />} />
+
+      <Route
+        path="/properties/new"
+        element={
+          <ProtectedRoute allowedRoles={['owner']}>
+            <CreateProperty />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/login"
