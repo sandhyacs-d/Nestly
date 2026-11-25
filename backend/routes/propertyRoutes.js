@@ -176,33 +176,7 @@ router.post("/", authMiddleware, authorize("owner"), validateProperty, asyncHand
 router.get("/", validateQuery, asyncHandler(getProperties));
 
 
-/**
- * @swagger
- * /api/properties/{id}:
- *   get:
- *     summary: Get property by ID
- *     description: Retrieves the details of a specific property.
- *     tags:
- *       - Properties
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: MongoDB property ID
- *     responses:
- *       200:
- *         description: Property retrieved successfully
- *       400:
- *         description: Invalid property ID
- *       404:
- *         description: Property not found
- *       500:
- *         description: Internal server error
- */
 
-router.get("/:id", asyncHandler(getPropertyById));
 
 /**
  * @swagger
@@ -240,6 +214,34 @@ router.get("/:id", asyncHandler(getPropertyById));
  */
 
 router.get("/my-properties",authMiddleware,authorize("owner"),validateQuery,asyncHandler(getMyProperties));
+
+/**
+ * @swagger
+ * /api/properties/{id}:
+ *   get:
+ *     summary: Get property by ID
+ *     description: Retrieves the details of a specific property.
+ *     tags:
+ *       - Properties
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB property ID
+ *     responses:
+ *       200:
+ *         description: Property retrieved successfully
+ *       400:
+ *         description: Invalid property ID
+ *       404:
+ *         description: Property not found
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get("/:id", asyncHandler(getPropertyById));
 
 
 /**
