@@ -160,3 +160,34 @@ export async function deleteProperty(req, res) {
         message: "Property deleted successfully"
     });
 }
+
+export async function getMyProperties(req, res) {
+    const { page, limit } = req.pagination;
+
+    const skip = (page - 1) * limit;
+
+    const filters = {
+        owner: req.user._id
+    };
+
+    const properties = await Property.find(filters)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    const totalProperties = await Property.countDocuments(filters);
+
+    const totalPages = Math.ceil(totalProperties / limit);
+
+    return res.status(200).json({
+        properties,
+        pagination: {
+            page,
+            limit,
+            totalProperties,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1
+        }
+    });
+}

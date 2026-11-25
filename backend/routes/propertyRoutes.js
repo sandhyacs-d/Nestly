@@ -1,6 +1,6 @@
 import express from "express";
 
-import { createProperty, deleteProperty, getProperties, getPropertyById, updateProperty } from "../controllers/propertyController.js";
+import { createProperty, deleteProperty, getProperties, getPropertyById, updateProperty, getMyProperties } from "../controllers/propertyController.js";
 import { authorize } from "../middleware/authorize.js";
 import { authMiddleware } from "../middleware/protect.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -203,6 +203,43 @@ router.get("/", validateQuery, asyncHandler(getProperties));
  */
 
 router.get("/:id", asyncHandler(getPropertyById));
+
+/**
+ * @swagger
+ * /api/properties/my-properties:
+ *   get:
+ *     summary: Get properties owned by the authenticated user
+ *     description: Retrieves all property listings belonging to the authenticated owner, including active and inactive listings, with pagination.
+ *     tags:
+ *       - Properties
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Owner's properties retrieved successfully
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Only property owners can access this resource
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get("/my-properties",authMiddleware,authorize("owner"),validateQuery,asyncHandler(getMyProperties));
 
 
 /**
