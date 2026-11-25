@@ -6,11 +6,22 @@ import PublicRoute from '../components/common/PublicRoute.jsx'
 import Home from '../features/properties/pages/home.jsx'
 import PropertyDetails from '../features/properties/pages/PropertyDetails'
 import CreateProperty from '../features/properties/pages/CreateProperty'
+import OwnerDashboard from '../features/properties/pages/ownerDashboard.jsx'
+import EditProperty from '../features/properties/pages/EditProperty'
 
 function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+
+      <Route
+        path="/properties/:id/edit"
+        element={
+          <ProtectedRoute allowedRoles={['owner']}>
+            <EditProperty />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/properties/:id" element={<PropertyDetails />} />
 
       <Route
@@ -21,6 +32,8 @@ function AppRouter() {
           </ProtectedRoute>
         }
       />
+
+
 
       <Route
         path="/login"
@@ -43,8 +56,8 @@ function AppRouter() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
-            <h1>Dashboard</h1>
+          <ProtectedRoute allowedRoles={['owner']}>
+            <OwnerDashboard />
           </ProtectedRoute>
         }
       />
