@@ -36,13 +36,22 @@ button {
   cursor: pointer;
 }
 
+
 /* Navbar */
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
   padding: 16px 5%;
   border-bottom: 1px solid #eeeeee;
+  background: #ffffff;
+}
+
+.navbar-brand {
+  flex-shrink: 0;
+  color: #222222;
 }
 
 .navbar-brand h2 {
@@ -54,7 +63,11 @@ button {
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
+}
+
+.navbar-links > a {
+  white-space: nowrap;
 }
 
 .navbar-user {
@@ -63,17 +76,59 @@ button {
   gap: 16px;
 }
 
+.navbar-user span {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .navbar-user button {
-  padding: 8px 16px;
+  padding: 9px 17px;
   border: none;
-  border-radius: 6px;
+  border-radius: 7px;
   background: #222222;
   color: white;
+  white-space: nowrap;
+}
+
+.navbar-user button:hover {
+  background: #444444;
 }
 
 .navbar-links a:hover {
   color: #777777;
 }
+
+/* Mobile Navbar */
+
+@media (max-width: 600px) {
+  .navbar {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .navbar-brand h2 {
+    font-size: 22px;
+  }
+
+  .navbar-links {
+    gap: 12px;
+  }
+
+  .navbar-user {
+    gap: 8px;
+  }
+
+  .navbar-user span {
+    max-width: 105px;
+    font-size: 0.85rem;
+  }
+
+  .navbar-user button {
+    padding: 9px 12px;
+    font-size: 0.85rem;
+  }
+}
+
 
 /* Homepage Hero */
 .home-hero {

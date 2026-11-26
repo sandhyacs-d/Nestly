@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
@@ -13,8 +14,8 @@ function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/" className="navbar-brand">
-  <h2>Nestly</h2>
-</Link>
+        <h2>Nestly</h2>
+      </Link>
 
       <div className="navbar-links">
         <Link to="/">Home</Link>
@@ -22,7 +23,9 @@ function Navbar() {
         {isAuthenticated ? (
           <div className="navbar-user">
             <span>Welcome, {user?.name}</span>
-            <button onClick={handleLogout}>Logout</button>
+            <button type="button" onClick={handleLogout}>
+              Logout
+            </button>
           </div>
         ) : (
           <>
