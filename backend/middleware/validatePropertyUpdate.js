@@ -21,7 +21,8 @@ export function validatePropertyUpdate(req, res, next) {
         "kitchen",
         "furnished",
         "amenities",
-        "images"
+        "images",
+        "status"
     ];
 
     const fields = Object.keys(req.body);
@@ -273,6 +274,18 @@ export function validatePropertyUpdate(req, res, next) {
         }
 
         req.body.images = images.map(image => image.trim());
+    }
+
+
+    if (req.body.status !== undefined) {
+        const allowedStatuses = ["active", "rented", "inactive"];
+
+        if (
+            typeof req.body.status !== "string" ||
+            !allowedStatuses.includes(req.body.status)
+        ) {
+            throw new AppError("Invalid property status", 400);
+        }
     }
     next();
 }

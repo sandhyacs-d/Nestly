@@ -315,15 +315,58 @@ test("Property update rejects an empty request body", async () => {
     assert.equal(response.status, 400);
 });
 
-test("Property update rejects fields that cannot be updated", async () => {
+test("Owner can change property status to rented", async () => {
     const response = await request(app)
         .patch(`/api/properties/${property._id}`)
         .set("Authorization", `Bearer ${ownerToken}`)
-        .send({
-            status: "rented"
-        });
+        .send({ status: "rented" });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.property.status, "rented");
+
+    const updatedProperty = await Property.findById(property._id);
+    assert.equal(updatedProperty.status, "rented");
+});
+
+test("Owner can change property status to inactive", async () => {
+    const response = await request(app)
+        .patch(`/api/properties/${property._id}`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ status: "inactive" });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.property.status, "inactive");
+});
+
+test("Owner can reactivate an inactive property", async () => {
+    property.status = "inactive";
+    await property.save();
+
+    const response = await request(app)
+        .patch(`/api/properties/${property._id}`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ status: "active" });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.property.status, "active");
+});
+
+test("Property update rejects an invalid status", async () => {
+    const response = await request(app)
+        .patch(`/api/properties/${property._id}`)
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ status: "pending" });
 
     assert.equal(response.status, 400);
+});
+
+test("Renter cannot change property status", async () => {
+    const response = await request(app)
+        .patch(`/api/properties/${property._id}`)
+        .set("Authorization", `Bearer ${renterToken}`)
+        .send({ status: "rented" });
+
+    assert.equal(response.status, 403);
 });
 
 test("Owner can delete their own property", async () => {
