@@ -8,12 +8,18 @@ import {
 } from '../propertyService'
 import './OwnerDashboard.css'
 
+const PAGE_SIZE = 5
+
 function OwnerDashboard() {
   const [properties, setProperties] = useState([])
   const [pagination, setPagination] = useState(null)
+  const [page, setPage] = useState(1)
+  const [refreshKey, setRefreshKey] = useState(0)
+
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
   const [updatingStatusId, setUpdatingStatusId] = useState(null)
+
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -23,7 +29,10 @@ function OwnerDashboard() {
         setLoading(true)
         setError('')
 
-        const data = await getMyProperties()
+        const data = await getMyProperties({
+          page,
+          limit: PAGE_SIZE,
+        })
 
         setProperties(data.properties)
         setPagination(data.pagination)
@@ -38,7 +47,7 @@ function OwnerDashboard() {
     }
 
     fetchMyProperties()
-  }, [])
+  }, [page, refreshKey])
 
   const handleStatusChange = async (propertyId, newStatus) => {
     try {
@@ -81,23 +90,14 @@ function OwnerDashboard() {
 
       await deleteProperty(propertyId)
 
-      setProperties((previousProperties) =>
-        previousProperties.filter(
-          (property) => property._id !== propertyId
-        )
-      )
+      setSuccess('Property deleted successfully.')
 
-      setPagination((previousPagination) =>
-        previousPagination
-          ? {
-              ...previousPagination,
-              totalProperties: Math.max(
-                0,
-                previousPagination.totalProperties - 1
-              ),
-            }
-          : previousPagination
-      )
+      // Move back if the deleted property was the only item on this page.
+      if (properties.length === 1 && page > 1) {
+        setPage((previousPage) => previousPage - 1)
+      } else {
+        setRefreshKey((previousKey) => previousKey + 1)
+      }
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -157,73 +157,99 @@ function OwnerDashboard() {
           </Link>
         </div>
       ) : (
-        <div className="owner-properties-list">
-          {properties.map((property) => (
-            <article
-              className="owner-property-card"
-              key={property._id}
-            >
-              <div className="property-card-header">
-                <h2>{property.title}</h2>
+        <>
+          <div className="owner-properties-list">
+            {properties.map((property) => (
+              <article
+                className="owner-property-card"
+                key={property._id}
+              >
+                <div className="property-card-header">
+                  <h2>{property.title}</h2>
 
-                <span className={`property-status ${property.status}`}>
-                  {property.status}
-                </span>
-              </div>
-
-              <div className="property-card-details">
-                <p>
-                  <strong>Location:</strong> {property.location}
-                </p>
-
-                <p>
-                  <strong>Rent:</strong> Rs. {property.price} / month
-                </p>
-              </div>
-
-              <div className="property-status-control">
-                <label htmlFor={`status-${property._id}`}>
-                  Listing Status
-                </label>
-
-                <select
-                  id={`status-${property._id}`}
-                  value={property.status}
-                  onChange={(e) =>
-                    handleStatusChange(property._id, e.target.value)
-                  }
-                  disabled={updatingStatusId === property._id}
-                >
-                  <option value="active">Active</option>
-                  <option value="rented">Rented</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-
-                {updatingStatusId === property._id && (
-                  <span className="status-loading">
-                    Updating...
+                  <span className={`property-status ${property.status}`}>
+                    {property.status}
                   </span>
-                )}
-              </div>
+                </div>
 
-              <div className="property-card-actions">
-                <Link to={`/properties/${property._id}/edit`}>
-                  Edit Property
-                </Link>
+                <div className="property-card-details">
+                  <p>
+                    <strong>Location:</strong> {property.location}
+                  </p>
 
-                <button
-                  type="button"
-                  onClick={() => handleDelete(property._id)}
-                  disabled={deletingId === property._id}
-                >
-                  {deletingId === property._id
-                    ? 'Deleting...'
-                    : 'Delete'}
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+                  <p>
+                    <strong>Rent:</strong> Rs. {property.price} / month
+                  </p>
+                </div>
+
+                <div className="property-status-control">
+                  <label htmlFor={`status-${property._id}`}>
+                    Listing Status
+                  </label>
+
+                  <select
+                    id={`status-${property._id}`}
+                    value={property.status}
+                    onChange={(e) =>
+                      handleStatusChange(property._id, e.target.value)
+                    }
+                    disabled={updatingStatusId === property._id}
+                  >
+                    <option value="active">Active</option>
+                    <option value="rented">Rented</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+
+                  {updatingStatusId === property._id && (
+                    <span className="status-loading">
+                      Updating...
+                    </span>
+                  )}
+                </div>
+
+                <div className="property-card-actions">
+                  <Link to={`/properties/${property._id}/edit`}>
+                    Edit Property
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(property._id)}
+                    disabled={deletingId === property._id}
+                  >
+                    {deletingId === property._id
+                      ? 'Deleting...'
+                      : 'Delete'}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {pagination && pagination.totalPages > 1 && (
+            <div className="dashboard-pagination">
+              <button
+                type="button"
+                onClick={() => setPage((previousPage) => previousPage - 1)}
+                disabled={!pagination.hasPreviousPage}
+              >
+                Previous
+              </button>
+
+              <span>
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setPage((previousPage) => previousPage + 1)}
+                disabled={!pagination.hasNextPage}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {pagination && (

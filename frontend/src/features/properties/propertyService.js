@@ -32,3 +32,18 @@ export const deleteProperty = async (id) => {
   return response.data
 }
 
+export const getFavorites = async () => {
+  const response = await api.get('/favorites')
+  return response.data
+}
+
+export const addFavorite = async (propertyId) => {
+  const response = await api.post(`/favorites/${propertyId}`)
+  return response.data
+}
+
+export const removeFavorite = async (propertyId) => {
+  const response = await api.delete(`/favorites/${propertyId}`)
+  return response.data
+}
+

@@ -257,3 +257,34 @@
     grid-template-columns: 1fr;
   }
 }
+.dashboard-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 32px;
+}
+
+.dashboard-pagination button {
+  padding: 10px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #fff;
+  color: #1f2937;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-pagination button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.dashboard-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard-pagination span {
+  color: #4b5563;
+  font-size: 0.95rem;
+}

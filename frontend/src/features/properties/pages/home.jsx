@@ -1,9 +1,12 @@
 
 import { useEffect, useState } from 'react'
-import { getProperties } from '../propertyService'
+import { getProperties, getFavorites } from '../propertyService'
 import FeaturedProperties from '../components/FeaturedProperties'
+import { useAuth } from '../../../context/AuthContext'
 
 function Home() {
+  const { user, isAuthenticated } = useAuth()
+
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -15,6 +18,7 @@ function Home() {
   const [sort, setSort] = useState('newest')
   const [pagination, setPagination] = useState(null)
   const [page, setPage] = useState(1)
+  const [favoriteIds, setFavoriteIds] = useState([])
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -34,6 +38,7 @@ function Home() {
         if (maxPrice !== '') params.maxPrice = maxPrice
 
         const data = await getProperties(params)
+
         setProperties(data.properties)
         setPagination(data.pagination)
       } catch (err) {
@@ -43,10 +48,35 @@ function Home() {
       } finally {
         setLoading(false)
       }
+
+      if (isAuthenticated && user?.role === 'renter') {
+        try {
+          const favoriteData = await getFavorites()
+
+          setFavoriteIds(
+            favoriteData.data.favorites
+              .map((favorite) => favorite.property?._id)
+              .filter(Boolean)
+          )
+        } catch (err) {
+          console.error('Failed to load favorites:', err)
+        }
+      } else {
+        setFavoriteIds([])
+      }
     }
 
     fetchProperties()
-  }, [location, propertyType, minPrice, maxPrice, sort, page])
+  }, [
+    location,
+    propertyType,
+    minPrice,
+    maxPrice,
+    sort,
+    page,
+    isAuthenticated,
+    user,
+  ])
 
   useEffect(() => {
     setPage(1)
@@ -66,9 +96,18 @@ function Home() {
     setSort('newest')
   }
 
+  const handleFavoriteChange = (propertyId, isFavorite) => {
+    setFavoriteIds((current) =>
+      isFavorite
+        ? current.includes(propertyId)
+          ? current
+          : [...current, propertyId]
+        : current.filter((id) => id !== propertyId)
+    )
+  }
+
   return (
     <main className="home-page">
-
       <section className="home-hero">
         <div className="hero-content">
           <h1>Find a place you'll love to call home.</h1>
@@ -156,11 +195,12 @@ function Home() {
         </button>
       </section>
 
-
       <FeaturedProperties
         properties={properties}
         loading={loading}
         error={error}
+        favoriteIds={favoriteIds}
+        onFavoriteChange={handleFavoriteChange}
       />
 
       {!loading && pagination && pagination.totalPages > 1 && (

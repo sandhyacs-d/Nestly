@@ -8,6 +8,7 @@ import PropertyDetails from '../features/properties/pages/PropertyDetails'
 import CreateProperty from '../features/properties/pages/CreateProperty'
 import OwnerDashboard from '../features/properties/pages/ownerDashboard.jsx'
 import EditProperty from '../features/properties/pages/EditProperty'
+import Favorites from '../features/properties/pages/Favorites'
 
 function AppRouter() {
   return (
@@ -62,6 +63,14 @@ function AppRouter() {
         }
       />
 
+      <Route
+        path="/favorites"
+        element={
+          <ProtectedRoute allowedRoles={['renter']}>
+            <Favorites />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }
